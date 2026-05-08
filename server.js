@@ -1381,6 +1381,7 @@ function extractDeviceName(obj, topic = '') {
     'displayName',
     'callsign',
     'label',
+    'origin',
   ]) {
     const value = obj[key];
     if (typeof value === 'string' && value.trim()) {
