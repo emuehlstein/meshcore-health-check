@@ -2243,13 +2243,16 @@ function updateObserverLocation(observerKey, location) {
 }
 
 function handleObserverMetadata(topic, observerKey, payloadBuffer) {
+  logger.debug(`[observer] metadata received from ${shortKey(observerKey)} (${topic})`);
   const observer = touchObserver(observerKey);
   if (!observer) {
+    logger.debug(`[observer] dropping metadata — observer ${shortKey(observerKey)} not registered`);
     return false;
   }
 
   const parsed = parseJsonObject(payloadBuffer);
   if (!parsed) {
+    logger.debug(`[observer] dropping metadata — invalid JSON from ${shortKey(observerKey)}`);
     return false;
   }
 
@@ -2428,14 +2431,17 @@ function channelDisplay(channelHash) {
 }
 
 function handlePacketMessage(topic, observerKey, payloadBuffer) {
+  logger.debug(`[packet] received from observer ${shortKey(observerKey)}`);
   const observer = touchObserver(observerKey);
   if (!observer) {
+    logger.debug(`[packet] dropping — observer ${shortKey(observerKey)} not registered`);
     return;
   }
   noteObserverPacketActivity(observer.key);
 
   const { raw, envelope } = parseEnvelope(payloadBuffer);
   if (!raw) {
+    logger.debug(`[packet] dropping — could not parse envelope from ${shortKey(observerKey)}`);
     return;
   }
 
@@ -2698,6 +2704,8 @@ app.post(
     const requestedAllowlist = explicitObserverAllowlist(request.body?.expectedObserverKeys);
     const defaultExpected = expectedObserversForSession();
     const expected = requestedAllowlist.enabled ? requestedAllowlist : defaultExpected;
+    const ip = request.ip || request.socket?.remoteAddress || 'unknown';
+    logger.debug(`[session] create request from ${ip} expectedObservers=${requestedAllowlist.enabled ? requestedAllowlist.keys.length : 'default'}`);
     const session = {
       id: randomUUID(),
       code: createCode(),
@@ -2922,7 +2930,9 @@ export function ingestMqttMessage(topic, payload) {
   const parts = String(topic || '').split('/');
   const streamType = parts[parts.length - 1] || '';
   const observerKey = parts[parts.length - 2] || '';
+  logger.debug(`[mqtt] message topic=${topic} stream=${streamType} observer=${shortKey(observerKey) || '(none)'}`);
   if (!observerKey) {
+    logger.debug(`[mqtt] dropping message — no observer key in topic ${topic}`);
     return;
   }
   if (streamType === 'packets') {
@@ -2933,6 +2943,8 @@ export function ingestMqttMessage(topic, payload) {
     if (handleObserverMetadata(topic, observerKey, payload)) {
       broadcastSnapshot(true);
     }
+  } else {
+    logger.debug(`[mqtt] unhandled stream type '${streamType}' on topic ${topic}`);
   }
 }
 
