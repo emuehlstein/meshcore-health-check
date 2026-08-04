@@ -1,5 +1,20 @@
 # Changes
 
+## v1.3.6
+
+- updated `@playwright/test` to `1.62.1`, `ws` to `8.21.2`, and
+  `actions/setup-node` to `v7`
+- updated transitive `ip-address` to `10.4.0` to resolve the npm audit
+  advisories affecting IPv4 and IPv6 trust-boundary classification
+- made client-address rate limiting honor Express `TRUST_PROXY` handling
+  instead of trusting `X-Forwarded-For` independently
+- added explicit boolean and numeric `TRUST_PROXY` parsing, including safe
+  direct-access operation with `TRUST_PROXY=false`
+- restricted the optional external hero link to HTTP(S) URLs before exposing
+  it to browser navigation
+- changed Docker production dependency installation to deterministic `npm ci`
+  lockfile installs
+
 ## v1.3.5
 
 - improved observer name learning from MQTT status metadata by using `origin`
