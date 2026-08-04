@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY scripts/patch-meshcore-decoder.js ./scripts/patch-meshcore-decoder.js
 
-RUN npm install --omit=dev --no-audit --fund=false
+RUN npm ci --omit=dev --no-audit --fund=false
 
 COPY server.js ./
 COPY lib ./lib

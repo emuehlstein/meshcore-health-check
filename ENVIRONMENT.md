@@ -15,10 +15,10 @@ in source files.
 | `APP_DESCRIPTION` | Generated coverage description | Site description and social metadata. |
 | `SITE_URL` | blank | Public site URL used for generated absolute share links and social metadata. Set this when running behind a reverse proxy. |
 | `CORESCOPE_URL` | blank | Optional CoreScope root URL. When set, matched message hashes link to `#/packets/<hash>`. |
-| `EXTERNAL_LINK_URL` | blank | Optional hero/control-center external link URL. |
+| `EXTERNAL_LINK_URL` | blank | Optional HTTP(S) hero/control-center external link URL. Other URL schemes are rejected. |
 | `EXTERNAL_LINK_LABEL` | blank | Label for the optional external link. |
 | `LOG_LEVEL` | `info` | Use `debug` only while troubleshooting ingest or decode behavior. |
-| `TRUST_PROXY` | `1` | Keep enabled behind Nginx, Cloudflare, or another reverse proxy. |
+| `TRUST_PROXY` | `1` | Express proxy trust setting. Use `1` behind one trusted reverse proxy or `false` for direct access so client IP rate limits cannot be spoofed with forwarded headers. |
 | `DISTANCE_UNIT` | `mi` | Distance labels for packet-path estimates. Use `mi` or `km`. |
 
 ## Storage

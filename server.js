@@ -100,6 +100,21 @@ function envBool(name, fallback = false) {
   return ['1', 'true', 'yes', 'on'].includes(raw);
 }
 
+function normalizeTrustProxy(value) {
+  const raw = String(value || '').trim();
+  const normalized = raw.toLowerCase();
+  if (['false', 'no', 'off'].includes(normalized)) {
+    return false;
+  }
+  if (['true', 'yes', 'on'].includes(normalized)) {
+    return true;
+  }
+  if (/^\d+$/.test(raw)) {
+    return Number(raw);
+  }
+  return raw;
+}
+
 function envList(name) {
   const raw = envValue(name, '');
   if (!raw) {
@@ -331,11 +346,11 @@ const CORESCOPE_URL = normalizeSiteUrl(envValue('CORESCOPE_URL', ''));
 const DISTANCE_UNIT = normalizeDistanceUnit(envValue('DISTANCE_UNIT', 'mi'));
 const PWA_APP_NAME = 'Mesh Reach';
 const REPO_URL = 'https://github.com/yellowcooln/meshcore-health-check';
-const EXTERNAL_LINK_URL = envValue('EXTERNAL_LINK_URL', '');
+const EXTERNAL_LINK_URL = normalizeSiteUrl(envValue('EXTERNAL_LINK_URL', ''));
 const EXTERNAL_LINK_LABEL = envValue('EXTERNAL_LINK_LABEL', '');
 const DASH_BROKER_HOST = envValue('DASH_BROKER_HOST', '');
 const APP_TITLE_OVERRIDE = envValue('APP_TITLE', '');
-const TRUST_PROXY = envValue('TRUST_PROXY', '1');
+const TRUST_PROXY = normalizeTrustProxy(envValue('TRUST_PROXY', '1'));
 const TURNSTILE_SITE_KEY = envValue('TURNSTILE_SITE_KEY', '');
 const TURNSTILE_SECRET_KEY = envValue('TURNSTILE_SECRET_KEY', '');
 const TURNSTILE_ENABLED = envBool(
@@ -1329,10 +1344,6 @@ function renderHtmlTemplate(template, request, pageTitleSuffix = '') {
 }
 
 function clientAddress(requestLike) {
-  const forwardedFor = requestLike.headers?.['x-forwarded-for'];
-  if (typeof forwardedFor === 'string' && forwardedFor.trim()) {
-    return forwardedFor.split(',')[0].trim();
-  }
   return (
     requestLike.ip ||
     requestLike.socket?.remoteAddress ||
