@@ -30,6 +30,7 @@ process.env.APP_EYEBROW = 'MeshCore Observer Coverage';
 process.env.APP_DESCRIPTION = 'Generate a test code, send it to the configured channel, and watch observer coverage build in real time.';
 process.env.DASH_BROKER_HOST = 'mqtt.example.test:443';
 process.env.CORESCOPE_URL = 'https://analyzer.example.test';
+process.env.EXTERNAL_LINK_URL = 'javascript:alert(1)';
 process.env.TEST_CHANNEL_NAME = 'health-check';
 process.env.TEST_CHANNEL_SECRET = 'E6D973AAC5101145AD3A3F3A0B3D52EB';
 process.env.OBSERVER_RETENTION_SECONDS = '14400';
@@ -116,8 +117,9 @@ test('GET /api/bootstrap returns site and channel configuration', async () => {
 
   const payload = await response.json();
   assert.equal(payload.site.title, 'MeshCore Observer Coverage');
-  assert.equal(payload.site.version, '1.3.5');
+  assert.equal(payload.site.version, '1.3.6');
   assert.equal(payload.site.coreScopeUrl, 'https://analyzer.example.test');
+  assert.equal(payload.site.externalLinkUrl, '');
   assert.equal(payload.testChannel.name, 'health-check');
   assert.equal(payload.testChannel.hash, '99');
   assert.equal(payload.turnstile.enabled, false);

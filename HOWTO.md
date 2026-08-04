@@ -48,6 +48,8 @@ cp .env.example .env
   observers from packet history
 - set `REGIONS_FILE` if you want region buttons above the observer selector
 - set `SITE_URL` to the public HTTPS origin when running behind a reverse proxy
+- keep `TRUST_PROXY=1` behind one trusted reverse proxy, or set it to `false`
+  when exposing the app directly
 - enable Turnstile if the site is internet-facing
 - leave `LOG_LEVEL=info` unless actively troubleshooting
 
