@@ -9,6 +9,8 @@
   non-numeric values, and coordinates outside valid latitude/longitude ranges
 - added browser regression coverage for selected-region map scoping and `0,0`
   observer suppression
+- updated `ws` to `8.21.3` and added weekly Dependabot monitoring for the
+  Docker base image
 
 ## v1.3.6
 
