@@ -76,9 +76,9 @@ const ui = {
 };
 
 const pageMode = document.body?.dataset?.pageMode || 'app';
-const mapObserverScope = document.body?.dataset?.mapObserverScope === 'expected'
-  ? 'expected'
-  : 'directory';
+const mapObserverScope = document.body?.dataset?.mapObserverScope === 'directory'
+  ? 'directory'
+  : 'expected';
 
 localStorage.removeItem(SESSION_STORAGE_KEY);
 localStorage.removeItem(SESSION_HISTORY_STORAGE_KEY);
@@ -1302,7 +1302,17 @@ function mapKnownObservers(session) {
     Array.isArray(session?.receipts) ? session.receipts.map((receipt) => receipt.observerKey) : [],
   );
   return source
-    .filter((observer) => observer.lat != null && observer.lon != null)
+    .filter((observer) => {
+      const lat = Number(observer.lat);
+      const lon = Number(observer.lon);
+      return observer.lat != null
+        && observer.lon != null
+        && Number.isFinite(lat)
+        && Number.isFinite(lon)
+        && Math.abs(lat) <= 90
+        && Math.abs(lon) <= 180
+        && !(lat === 0 && lon === 0);
+    })
     .map((observer) => ({
       ...observer,
       seen: Boolean(observer.seen) || seenKeys.has(observer.key),
