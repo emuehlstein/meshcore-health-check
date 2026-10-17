@@ -14,6 +14,7 @@ export default defineConfig({
       testMatch: /dashboard\.spec\.js/,
       use: {
         baseURL: 'http://127.0.0.1:3091',
+        serviceWorkers: 'block',
       },
     },
     {

@@ -117,7 +117,7 @@ test('GET /api/bootstrap returns site and channel configuration', async () => {
 
   const payload = await response.json();
   assert.equal(payload.site.title, 'MeshCore Observer Coverage');
-  assert.equal(payload.site.version, '1.3.6');
+  assert.equal(payload.site.version, '1.3.7');
   assert.equal(payload.site.coreScopeUrl, 'https://analyzer.example.test');
   assert.equal(payload.site.externalLinkUrl, '');
   assert.equal(payload.testChannel.name, 'health-check');

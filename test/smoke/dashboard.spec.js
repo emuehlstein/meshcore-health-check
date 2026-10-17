@@ -1,5 +1,110 @@
 import { expect, test } from '@playwright/test';
 
+const MAP_TEST_KEYS = {
+  target: '1111111111111111111111111111111111111111111111111111111111111111',
+  outside: '2222222222222222222222222222222222222222222222222222222222222222',
+  zero: '3333333333333333333333333333333333333333333333333333333333333333',
+};
+
+function mapObserver(key, label, lat, lon, region) {
+  return {
+    key,
+    hash: key.slice(0, 2),
+    label,
+    name: label,
+    shortKey: `${key.slice(0, 6)}...${key.slice(-6)}`,
+    lat,
+    lon,
+    hasLocation: true,
+    region,
+    regionGroup: null,
+    isActive: true,
+    isRetained: true,
+    packetCount: 1,
+  };
+}
+
+function mapBootstrap(observerDirectory) {
+  return {
+    site: {
+      title: 'MeshCore Observer Coverage',
+      eyebrow: 'MeshCore Observer Coverage',
+      headline: 'Check your mesh reach.',
+      description: 'Generate a test code, send it to the configured channel, and watch observer coverage build in real time.',
+      version: '1.3.7',
+      repoUrl: 'https://github.com/yellowcooln/meshcore-health-check',
+      changesUrl: 'https://github.com/yellowcooln/meshcore-health-check/blob/main/CHANGES.md',
+    },
+    mqtt: { connected: false, broker: 'mqtt.example.test', topics: ['meshcore/BOS/#'] },
+    testChannel: { name: 'health-check', hash: '99' },
+    turnstile: { enabled: false, verified: true },
+    defaultObserverSource: 'configured',
+    defaultObserverKeys: observerDirectory.map((observer) => observer.key),
+    defaultObservers: observerDirectory,
+    observerDirectory,
+    activeObservers: observerDirectory,
+    observerStats: {
+      activeCount: observerDirectory.length,
+      windowSeconds: 900,
+      configuredCount: observerDirectory.length,
+      retentionSeconds: 0,
+      topWindowDays: 7,
+      topCount: 10,
+      hashDisplayBytes: 1,
+      distanceUnit: 'mi',
+    },
+    availableRegions: [...new Set(observerDirectory.map((observer) => observer.region).filter(Boolean))],
+    regionHierarchy: [],
+    results: { retentionSeconds: 604800 },
+  };
+}
+
+function mapSession(expectedObservers) {
+  const now = Date.now();
+  return {
+    id: 'map-session',
+    code: 'MHC-MAP123',
+    instructions: 'Send MHC-MAP123 to #health-check',
+    status: 'active',
+    createdAt: now,
+    expiresAt: now + 600000,
+    resultExpiresAt: now + 604800000,
+    maxUses: 3,
+    useCount: 0,
+    usesRemaining: 3,
+    expectedCount: expectedObservers.length,
+    observedCount: 0,
+    healthPercent: 0,
+    healthLabel: 'POOR',
+    expectedObserverSource: 'selected observers',
+    expectedObservers: expectedObservers.map((observer) => ({
+      key: observer.key,
+      hash: observer.hash,
+      label: observer.label,
+      seen: false,
+    })),
+    receipts: [],
+  };
+}
+
+async function openMockMapSession(page, observerDirectory, expectedObservers) {
+  await page.addInitScript(() => {
+    window.WebSocket = class {
+      addEventListener() {}
+      close() {}
+    };
+  });
+  await page.route('**/api/bootstrap', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify(mapBootstrap(observerDirectory)),
+  }));
+  await page.route('**/api/sessions/map-session', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify(mapSession(expectedObservers)),
+  }));
+  await page.goto('/share/map-session');
+}
+
 test('dashboard loads and creates a session code', async ({ page }) => {
   await page.goto('/app');
 
@@ -52,6 +157,26 @@ test('changing the observer selection updates the target and regenerates the unu
   await expect(page.locator('#expected-observers .observer-pill')).toHaveCount(1);
   await expect(sessionCode).not.toHaveText(initialCode || '', { timeout: 10000 });
   await expect(page.locator('#expected-source')).toContainText('Custom set');
+});
+
+test('coverage map only plots observers targeted by the selected region', async ({ page }) => {
+  const target = mapObserver(MAP_TEST_KEYS.target, 'Target Observer', 42.3601, -71.0589, 'BOS');
+  const outside = mapObserver(MAP_TEST_KEYS.outside, 'Outside Observer', 48.8566, 2.3522, 'CDG');
+
+  await openMockMapSession(page, [target, outside], [target]);
+
+  await expect(page.locator('#map-observer-note')).toHaveText('0/1 mapped observers reached.');
+  await expect(page.locator('#observer-map .leaflet-marker-icon')).toHaveCount(1);
+});
+
+test('coverage map omits observers with 0,0 coordinates', async ({ page }) => {
+  const target = mapObserver(MAP_TEST_KEYS.target, 'Target Observer', 42.3601, -71.0589, 'BOS');
+  const zero = mapObserver(MAP_TEST_KEYS.zero, 'Zero Observer', 0, 0, 'BOS');
+
+  await openMockMapSession(page, [target, zero], [target, zero]);
+
+  await expect(page.locator('#map-observer-note')).toHaveText('0/1 mapped observers reached.');
+  await expect(page.locator('#observer-map .leaflet-marker-icon')).toHaveCount(1);
 });
 
 test('escapes untrusted observer labels in timeline and map popups', async ({ page }) => {

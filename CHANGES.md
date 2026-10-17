@@ -1,5 +1,17 @@
 # Changes
 
+## v1.3.7
+
+- changed the coverage map to follow the active session's expected observer set
+  so geographic region and manual observer selections no longer leave unrelated
+  directory observers visible on the map
+- filtered invalid map coordinates, including the `0,0` no-position sentinel,
+  non-numeric values, and coordinates outside valid latitude/longitude ranges
+- added browser regression coverage for selected-region map scoping and `0,0`
+  observer suppression
+- updated `ws` to `8.21.3` and added weekly Dependabot monitoring for the
+  Docker base image
+
 ## v1.3.6
 
 - updated `@playwright/test` to `1.62.1`, `ws` to `8.21.2`, and
